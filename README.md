@@ -27,6 +27,7 @@ The primary objective of this lab is to provide a hands-on learning experience b
 
 
 ## Active Directory Project Diagram:
+<img width="629" height="659" alt="active_directory" src="https://github.com/user-attachments/assets/cd553097-9d7a-48c8-b41b-96553e84cb18" />
 
 
 ## 1. Active Directory Project Setup
@@ -80,37 +81,53 @@ This section outlines the steps for VM installation, network configuration, and 
 5. Configure Static IP for Windows Server
     * Configure a static IP address in the same manner as the Windows 10 machine.
 
-6 Configure Static IP for Kali linux
+6. Configure Static IP for Kali linux
     * Click the network icon in the top-right corner and select "Edit Connections."
     * Choose "Wired connection 1," go to the "IPv4 Settings" tab, change the method to Manual, and add the desired IP address and netmask.
     * Click Save.
 
 ### 1.3. Splunk Server Configuration
 1. **File Transfer and Guest Additions:** To facilitate file transfers between the host system and the VM, the VirtualBox Guest Additions are required. Install the necessary packages using the following commands:
-  ```bash
-  sudo apt-get install virtualbox-guest-additions-iso
-  sudo apt-get install virtualbox-guest-utils
-  ```
+    ```Bash
+    sudo apt-get install virtualbox-guest-additions-iso
+    sudo apt-get install virtualbox-guest-utils
+    ```
 2. After installation, reboot the VM.
 3. **Shared Folder Configuration:**
     - Add the current user to the `vboxsf` group to enable shared folder access:
-          ```Bash sudo adduser [username] vboxsf```
+        ```Bash
+        sudo adduser [username] vboxsf
+        ```
     - Create a directory for the shared folder:
-          ```Bash mkdir shared```
+        ```Bash
+        mkdir shared
+        ```
     - Mount the shared folder:
-          ```Bash sudo mount -t vboxsf -o uid=1000,gid=1000 [foldername] shared```
+      ```Bash
+      sudo mount -t vboxsf -o uid=1000,gid=1000 [foldername] shared
+      ```
 4. **Splunk Installation and Configuration:**
     - Install Splunk using the downloaded installer file:
-          ```Bash sudo dpkg -i [installer_name]```
+        ```Bash
+        sudo dpkg -i [installer_name]
+        ```
     - Navigate to the Splunk installation directory:
-          ```Bash cd /opt/splunk```
+       ```Bash
+       cd /opt/splunk
+       ```
     - To perform administrative tasks, switch to the `splunk` user:
-          ```Bash sudo -u splunk bash```
+       ```Bash
+       sudo -u splunk bash
+       ```
     - Navigate to the bin directory:
-          ```Bash cd /opt/splunk/bin```
+      ```Bash
+      cd /opt/splunk/bin
+      ```
     - Start the Splunk service for the first time: `./splunk start`. This will prompt you to read and accept the license agreement and create an administrative username and password.
     - Configure Splunk to start automatically at boot:
-          ```Bash sudo ./splunk enable boot-start -user splunk```
+      ```Bash
+      sudo ./splunk enable boot-start -user splunk
+      ```
 
 ### 1.4. Install Sysmon on Windows 10 and Windows Server
 
