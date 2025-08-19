@@ -1,1 +1,193 @@
 # Active-Directory-Project
+
+## Introduction
+
+This document provides a comprehensive guide for setting up an Active Directory lab environment using virtual machines. The project utilizes Oracle VM VirtualBox to create a network of VMs, including Windows 10, Kali Linux, Windows Server, and Ubuntu Server. This controlled environment is designed for exploring cybersecurity concepts, with a focus on Active Directory administration, security testing, and log analysis.
+
+
+### Project Objectives
+
+The primary objective of this lab is to provide a hands-on learning experience by:
+* Creating and configuring a virtualized environment with a variety of operating systems (Windows 10, Kali Linux, Windows Server, and Ubuntu Server).
+* Gaining practical experience in network configuration, security tool deployment (e.g., Splunk and Sysmon), endpoint monitoring, and security testing (e.g., brute force attacks with **Hydra**).
+* Integrating Windows machines into an Active Directory domain and enabling Remote Desktop access for remote management.
+* Utilizing PowerShell and **Bash** scripting to automate various administrative tasks.
+* Overall, this lab aims to equip participants with a foundational understanding of cybersecurity concepts, tools, and techniques in a secure and controlled setting.
+
+
+### Requirements and Tools
+
+| **Category** | **Tools and Requirements** |
+| :--- | :--- |
+| **Virtualization** | Oracle VM VirtualBox Manager |
+| **Operating Systems** | Windows Server 2022, Microsoft Windows 10, Kali Linux, Ubuntu Server 24.04.1 LTS |
+| **Security Tools** | Splunk Server, Splunk Universal Forwarder, Sysmon, Hydra, Atomic Red Team (ART) |
+| **Log Analysis** | Microsoft Windows Event Logs |
+| **Scripting** | PowerShell, Bash |
+
+
+## Active Directory Project Diagram:
+
+
+## 1. Active Directory Project Setup
+
+This section outlines the steps for VM installation, network configuration, and tool deployment.
+
+### 1.1. VM Installation
+
+* **Windows 10:** Download the Windows 10 ISO file using the Microsoft installation media creation tool. In VirtualBox, create a new VM with the ISO, allocate **6096MB** of RAM, **4 CPU**, and a 50GB virtual disk, then proceed with a custom installation.
+* **Kali Linux:** Download the Kali Linux VM version and use a tool like 7-zip to extract the files. Import the extracted VM into VirtualBox and start it.
+* **Windows Server 2022:** Download the Windows Server 2022 ISO. In VirtualBox, create a new VM, allocate **6096MB** of RAM, **4 CPU**, and a 50GB virtual disk. Follow the on-screen prompts to install the Standard Evaluation (Desktop Experience) edition and set an administrator password.
+* **Ubuntu Server:** Download the Ubuntu Server 24.04.1 LTS ISO. Create a new VM with **8192MB** of RAM, **4 CPUs**, and a 100GB virtual disk. Follow the installation prompts, then log in and execute `sudo apt-get update && sudo apt-get upgrade -y` to update the system.
+
+
+### 1.2. Network Configuration
+
+1. **Create a NAT Network:** In VirtualBox, navigate to Tools and select NAT Networks to create a new network. Use the IP range 192.168.10.0/24 for this project.
+2. **Assign Network to VMs:** For all the VMs, change their network adapter settings to use the custom NAT network you just created. This enables internet connectivity and direct communication among the machines.
+3. **Configure Static IP for Ubuntu Server:** Edit the network configuration file on the Ubuntu Server to assign a static IP address.
+4. **Open the network configuration file using `sudo nano /etc/netplan/00-installer-config.yaml` or `sudo nano /etc/netplan/50-cloud-init.yaml`.**
+5. **Modify the file to include the static IP details:**
+    ```yaml
+    network:
+      version: 2
+      ethernets:
+        enp0s3:
+          dhcp4: no
+          addresses: [192.168.10.10/24]
+          routes:
+            - to: default
+              via: 192.168.10.1
+          nameservers:
+            addresses: [8.8.8.8]
+    ```
+6. Save the file and apply the changes with `sudo netplan apply`.
+7. **Configure Static IP for Windows 10:**
+    - Right-click the network icon and go to **"Network & Internet settings"**.
+    - Click **"Change adapter options"**, right-click Ethernet, and select **Properties**.
+    - Double-click **"Internet Protocol Version 4 (TCP/IPv4)"**, select **"Use the following IP address,"** and enter the desired IP address and subnet mask.
+8. **Configure Static IP for Windows Server:** Configure a static IP address in the same manner as the Windows 10 machine.
+9. **Configure Static IP for Kali Linux:**
+    - Click the network icon in the top-right corner and select **"Edit Connections."**
+    - Choose **"Wired connection 1,"** go to the **"IPv4 Settings"** tab, change the method to **Manual**, and add the desired IP address and netmask.
+    - Click **Save**.
+
+### 2.3. Splunk Server Configuration
+
+- **File Transfer and Guest Additions:** To facilitate file transfers, the VirtualBox Guest Additions are required. Install the necessary packages using:
+    - **`sudo apt-get install virtualbox-guest-additions-iso`**
+    - **`sudo apt-get install virtualbox-guest-utils`**
+    - After installation, reboot the VM.
+- **Shared Folder Configuration:**
+    - Add the current user to the `vboxsf` group to enable shared folder access: `sudo adduser [username] vboxsf`.
+    - Create a directory for the shared folder: `mkdir shared`.
+    - Mount the shared folder: `sudo mount -t vboxsf -o uid=1000,gid=1000 [foldername] shared`.
+- **Splunk Installation and Configuration:**
+    - Install Splunk using the downloaded installer file: `sudo dpkg -i **[installer_name]**`.
+    - Navigate to the Splunk installation directory: `cd /opt/splunk`.
+    - To perform administrative tasks, switch to the `splunk` user: `sudo -u splunk bash`.
+    - Navigate to the bin directory: `cd /opt/splunk/bin`.
+    - Start the Splunk service for the first time: `./splunk start`. This will prompt you to read and accept the license agreement and create an administrative username and password.
+    - Configure Splunk to start automatically at boot: `sudo ./splunk enable boot-start -user splunk`.
+
+### 2.4. Install Sysmon on Windows 10 and Windows Server
+
+- Download **Sysmon** from Microsoft Sysinternals.
+- Download a pre-configured `sysmonconfig.xml` from Sysmon Modular.
+- Extract the Sysmon files and place the `sysmonconfig.xml` into the extracted directory.
+- Open PowerShell as an administrator.
+- Navigate to the Sysmon directory: `cd "C:\Users\Downloads\sysmon"`.
+- Run `.\sysmon64.exe -i` to install Sysmon.
+- Verify Sysmon is running: `Get-Process sysmon64`.
+- Install configuration to Sysmon: `.\sysmon64.exe -i sysmonconfig.xml`.
+
+### 2.5. Install Splunk Universal Forwarder on Windows 10 and Windows Server
+
+- Download **Splunk Universal Forwarder** from the Splunk Website.
+- Install Splunk Universal Forwarder.
+- Go to the folder where the forwarder is installed and navigate to `splunk > system > local`. Create a file named `input.conf` with the following content:
+    ```ini
+    [WinEventLog://Microsoft-Windows-Sysmon/Operational]
+    index = endpoint
+    disabled = false
+    renderXml = true
+    source = XmlWinEventLog:Microsoft-Windows-Sysmon/Operational
+
+    [WinEventLog://Microsoft-Windows-Windows Defender/Operational]
+    index = endpoint
+    disabled = false
+    source = Microsoft-Windows-Windows Defender/Operational
+    blacklist = 1151,1150,2000,1002,1001,1000
+
+    [WinEventLog://Microsoft-Windows-PowerShell/Operational]
+    index = endpoint
+    disabled = false
+    source = Microsoft-Windows-PowerShell/Operational
+    blacklist = 4100,4105,4106,40961,40962,53504
+
+    [WinEventLog://Application]
+    index = endpoint
+    disabled = false
+
+    [WinEventLog://Security]
+    index = endpoint
+    disabled = false
+
+    [WinEventLog://System]
+    index = endpoint
+    disabled = false
+    ```
+- Launch Splunk from a browser using the server IP and port **8000**, log in, and enable data collection.
+- To parse the Sysmon data, download the **Splunk Add-on for Sysmon** from **Apps → Find More Apps** within the Splunk interface.
+- Create a new index named **"endpoint"** by navigating to **Settings ➡️ Indexes**, clicking **New Index**, naming it "endpoint," and saving the configuration.
+
+### 2.6. Active Directory Configuration
+
+- **Install ADDS:** On the Windows Server, launch **Server Manager**. Navigate to **Manage > Add Roles and Features** to install **Active Directory Domain Services**.
+- **Promote to Domain Controller:** After ADDS installation, **go to** the flag in the top-right corner of Server Manager. Click it and select **Promote this server to a domain controller**. Choose to **add a new forest**, provide a top-level domain name, set a password, and complete the installation. The server will automatically restart. The login screen will display the domain name, confirming the **server** is now a domain controller.
+- **Create Active Directory Users:** In **Server Manager**, go to **Tools > Active Directory Users and Computers**. Right-click your domain name to create a new **Organizational Unit (OU)**. Within this new folder, right-click and create the necessary user accounts.
+- **Join Windows 10 to the Domain:** On the Windows 10 machine, go to **About > Advanced system settings > Computer Name > Change**. Enter the domain name, authenticate with an administrator account, and restart the machine. Log in as one of the newly created domain users.
+
+### 2.7 Remote Desktop Setup
+
+- **Enable Remote Desktop:** On the Windows 10 machine, navigate to **System Properties** by going to **Windows > PC > Properties > Advanced system settings**. Log in as an administrator, click the **Remote** tab, and select **Allow remote connections to this computer**.
+- **Add Users:** Click **Select Users** to add the domain users who will have remote access. Confirm the changes by clicking **OK** and **Apply**.
+
+## 3. Security Testing with Hydra and Atomic Red Team
+
+### 3.1. Brute Force Attack
+
+- **Kali Linux Configuration:** Update the package repositories of Kali Linux. Create a project directory.
+    ```bash
+    sudo apt-get update && sudo apt-get upgrade -y
+    mkdir ad-project
+    ```
+- **Brute Force Attack Preparation:** Copy a password wordlist into your project directory. Create a smaller password list by selecting approximately 20 passwords from the main list and adding the passwords for the users you created on the Windows Server.
+    ```bash
+    cd /usr/share/wordlists/
+    sudo gunzip rockyou.txt.gz
+    cp rockyou.txt ~/Desktop/ad-project
+    cd ~/Desktop/ad-project
+    head -n 20 rockyou.txt > passwords.txt
+    nano passwords.txt
+    ```
+- **Execution:** Use **Hydra** to launch a brute force attack against the Windows 10 machine's Remote Desktop Protocol (RDP) service. The command: `hydra -l [username] -P [passwordlist] -V rdp://[target_IP]` will attempt to authenticate with the specified user and password list. A successful connection will be established upon finding the correct credentials.
+- **Splunk Log Analysis:** In Splunk, use a search query like `index=endpoint username="<username>"` to find events. Expand on **Event ID 4625** to see the failed login attempts originating from the Kali machine's IP address.
+
+### 3.2. Atomic Red Team (ART) Execution
+
+- **Setup:** On the Windows 10 machine, turn off Windows Defender's real-time protection and add an exclusion for the C drive. Open PowerShell as an administrator and set the execution policy to bypass with `set-ExecutionPolicy Bypass -CurrentUser`. Install ART by executing: `IEX(IWR 'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicredteam.ps1' -UseBasicParsing); Install-AtomicRedTeam -getAtomics`.
+- **First Technique: Local Account Creation (T1136.001)**
+    - **Simulate an Attack:** The ART files are installed on the C drive in a folder containing various technique IDs (TIDs) that correspond to the MITRE ATT&CK framework. Execute a local account creation attack with the command `Invoke-AtomicTest T1136.001`. This will create a new local user on the system.
+    - **Monitor with Splunk:** Go to Splunk and search for the newly created user (e.g., `newlocaluser`). The events that appear confirm that Splunk successfully detected and logged the attack.
+- **Second Technique: PowerShell (T1059.001)**
+    - **Execution:** To simulate a PowerShell attack, use the command `Invoke-AtomicTest T1059.001`.
+    - **Monitor with Splunk:** Go to Splunk and search for PowerShell events to confirm that the scripting activity was successfully detected and logged.
+
+## References
+
+1. [Active Directory Part 1 – MyDFIR](https://www.youtube.com/watch?v=mWqYyl89QaY&list=PLG6KGSNK4PuBWmX9NykU0wnWamjxdKhDJ&index=15&ab_channel=MyDFIR)
+2. [Active Directory Part 2 – MyDFIR](https://www.youtube.com/watch?v=2cEj3bS5C0Q&list=PLG6KGSNK4PuBWmX9NykU0wnWamjxdKhDJ&index=16&ab_channel=MyDFIR)
+3. [Active Directory Part 3 – MyDFIR](https://www.youtube.com/watch?v=uXRxoPKX65Q&list=PLG6KGSNK4PuBWmX9NykU0wnWamjxdKhDJ&index=17&ab_channel=MyDFIR)
+4. [Active Directory Part 4 – MyDFIR](https://www.youtube.com/watch?v=1XeDht_B-bA&list=PLG6KGSNK4PuBWmX9NykU0wnWamjxdKhDJ&index=18&ab_channel=MyDFIR)
+5. [Active Directory Part 5 – MyDFIR](https://www.youtube.com/watch?v=orq-OPIdV9M&list=PLG6KGSNK4PuBWmX9NykU0wnWamjxdKhDJ&index=19&ab_channel=MyDFIR)
