@@ -134,21 +134,31 @@ This section outlines the steps for VM installation, network configuration, and 
       ```
 
 ### 1.4. Install Sysmon on Windows 10 and Windows Server
+  1. Download **Sysmon** from [Microsoft Sysinternals](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon).
+  2. Download a pre-configured `sysmonconfig.xml` from [Sysmon Modular](https://github.com/olafhartong/sysmon-modular).
+  3. Extract the Sysmon files and place the `sysmonconfig.xml` into the extracted directory.
+  4. Open PowerShell as an administrator.
+  5. Navigate to the Sysmon directory:
+      ```PowerShell
+      cd C:\Users\Downloads\sysmon
+      ```
+  6. Install Sysmon.
+      ```PowerShell
+      .\sysmon64.exe to install Sysmon.
+      ```
+  7. Verify Sysmon is running:
+      ```PowerShell
+      Get-Process sysmon64
+      ```
+  8. Install configuration to Sysmon:
+     ```PowerShell
+     .\sysmon64.exe -i sysmonconfig.xml
+     ```
 
-- Download **Sysmon** from Microsoft Sysinternals.
-- Download a pre-configured `sysmonconfig.xml` from Sysmon Modular.
-- Extract the Sysmon files and place the `sysmonconfig.xml` into the extracted directory.
-- Open PowerShell as an administrator.
-- Navigate to the Sysmon directory: `cd "C:\Users\Downloads\sysmon"`.
-- Run `.\sysmon64.exe -i` to install Sysmon.
-- Verify Sysmon is running: `Get-Process sysmon64`.
-- Install configuration to Sysmon: `.\sysmon64.exe -i sysmonconfig.xml`.
-
-### 2.5. Install Splunk Universal Forwarder on Windows 10 and Windows Server
-
-- Download **Splunk Universal Forwarder** from the Splunk Website.
-- Install Splunk Universal Forwarder.
-- Go to the folder where the forwarder is installed and navigate to `splunk > system > local`. Create a file named `input.conf` with the following content:
+### 1.5. Install Splunk Universal Forwarder on Windows 10 and Windows Server
+1. Download **Splunk Universal Forwarder** from the Splunk Website.
+2. Install Splunk Universal Forwarder.
+3. Go to the folder where the forwarder is installed and navigate to `splunk > system > local`. Create a file named `inputs.conf` with the following content:
     ```ini
     [WinEventLog://Microsoft-Windows-Sysmon/Operational]
     index = endpoint
@@ -180,16 +190,19 @@ This section outlines the steps for VM installation, network configuration, and 
     index = endpoint
     disabled = false
     ```
-- Launch Splunk from a browser using the server IP and port **8000**, log in, and enable data collection.
-- To parse the Sysmon data, download the **Splunk Add-on for Sysmon** from **Apps → Find More Apps** within the Splunk interface.
-- Create a new index named **"endpoint"** by navigating to **Settings ➡️ Indexes**, clicking **New Index**, naming it "endpoint," and saving the configuration.
+4. Launch Splunk from a browser using the server IP and port **8000**, log in, and enable data collection.
+5. To parse the Sysmon data, download the **Splunk Add-on for Sysmon** from **Apps > Find More Apps** within the Splunk interface.
+6. Create a new index named **"endpoint"** by navigating to **Settings > Indexes**, clicking **New Index**, naming it "endpoint," and saving the configuration.
 
-### 2.6. Active Directory Configuration
+### 1.6. Active Directory Configuration
+1. **Install ADDS:** On the Windows Server, launch **Server Manager**. Navigate to **Manage > Add Roles and Features** to install **Active Directory Domain Services**.
+2. **Promote to Domain Controller:** After ADDS installation, **go to** the flag in the top-right corner of Server Manager. Click it and select **Promote this server to a domain controller**. Choose to **add a new forest**, provide a top-level domain name, set a password, and complete the installation. The server will automatically restart. The login screen will display the domain name, confirming the **server** is now a domain controller.
+3. **Create Active Directory Users:** In **Server Manager**, go to **Tools > Active Directory Users and Computers**. Right-click your domain name to create a new **Organizational Unit (OU)**. Within this new folder, right-click and create the necessary user accounts.
+4 **Join Windows 10 to the Domain:** On the Windows 10 machine, go to **About > Advanced system settings > Computer Name > Change**. Enter the domain name, authenticate with an administrator account, and restart the machine. Log in as one of the newly created domain users.
 
-- **Install ADDS:** On the Windows Server, launch **Server Manager**. Navigate to **Manage > Add Roles and Features** to install **Active Directory Domain Services**.
-- **Promote to Domain Controller:** After ADDS installation, **go to** the flag in the top-right corner of Server Manager. Click it and select **Promote this server to a domain controller**. Choose to **add a new forest**, provide a top-level domain name, set a password, and complete the installation. The server will automatically restart. The login screen will display the domain name, confirming the **server** is now a domain controller.
-- **Create Active Directory Users:** In **Server Manager**, go to **Tools > Active Directory Users and Computers**. Right-click your domain name to create a new **Organizational Unit (OU)**. Within this new folder, right-click and create the necessary user accounts.
-- **Join Windows 10 to the Domain:** On the Windows 10 machine, go to **About > Advanced system settings > Computer Name > Change**. Enter the domain name, authenticate with an administrator account, and restart the machine. Log in as one of the newly created domain users.
+<img width="512" height="320" alt="ad1" src="https://github.com/user-attachments/assets/8793eb13-641d-41af-8777-c54a87868bc4" />
+<img width="512" height="249" alt="ad2" src="https://github.com/user-attachments/assets/b15588cc-27fb-4e3a-b039-e40120b34bec" />
+<img width="512" height="406" alt="ad3" src="https://github.com/user-attachments/assets/3cc0d0bd-70e8-4970-ac7a-daeb5fa62345" />
 
 ### 2.7 Remote Desktop Setup
 
