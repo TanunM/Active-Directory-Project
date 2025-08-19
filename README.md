@@ -156,7 +156,7 @@ This section outlines the steps for VM installation, network configuration, and 
      ```
 
 ### 1.5. Install Splunk Universal Forwarder on Windows 10 and Windows Server
-1. Download **Splunk Universal Forwarder** from the Splunk Website.
+1. Download **Splunk Universal Forwarder** from the [Splunk Website](https://www.splunk.com/).
 2. Install Splunk Universal Forwarder.
 3. Go to the folder where the forwarder is installed and navigate to `splunk > system > local`. Create a file named `inputs.conf` with the following content:
     ```ini
@@ -215,20 +215,20 @@ This section outlines the steps for VM installation, network configuration, and 
 ## 2. Security Testing with Hydra and Atomic Red Team
 
 ### 2.1. Brute Force Attack
-1 **Kali Linux Configuration:** Update the package repositories of Kali Linux. Create a project directory.
-    ```Bash
-    sudo apt-get update && sudo apt-get upgrade -y
-    mkdir ad-project
-    ```
-2 **Brute Force Attack Preparation:** Copy a password wordlist into your project directory. Create a smaller password list by selecting approximately 20 passwords from the main list and adding the passwords for the users you created on the Windows Server.
-    ```Bash
+1 **Kali Linux Configuration:** Update the package repositories of Kali Linux. Create a project directory
+  ```Bash
+sudo apt-get update && sudo apt-get upgrade -y
+mkdir ad-project
+  ```
+2 **Brute Force Attack Preparation:** Copy a password wordlist into your project directory. Create a smaller password list by selecting approximately 20 passwords from the main list and adding the passwords for the users you created on the Windows Server
+  ```Bash
     cd /usr/share/wordlists/
     sudo gunzip rockyou.txt.gz
     cp rockyou.txt ~/Desktop/ad-project
     cd ~/Desktop/ad-project
     head -n 20 rockyou.txt > passwords.txt
     nano passwords.txt
-    ```
+  ```
   
   <img width="512" height="347" alt="hydra1" src="https://github.com/user-attachments/assets/1eca479b-0c28-4aee-a080-460aa2487b7c" />
     
@@ -259,18 +259,20 @@ This section outlines the steps for VM installation, network configuration, and 
 ### 2.2. Atomic Red Team (ART) Execution
 
 1 **Setup:** On the Windows 10 machine, turn off Windows Defender's real-time protection and add an exclusion for the C drive. Open PowerShell as an administrator and set the execution policy to bypass with
-    ```PowerShell
-    set-ExecutionPolicy Bypass -CurrentUser`. Install ART by executing: `IEX(IWR   'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicredteam.ps1' -UseBasicParsing);
-    Install-AtomicRedTeam -getAtomics
-    ```
+  
+  ```PowerShell
+  set-ExecutionPolicy Bypass -CurrentUser`. Install ART by executing: `IEX(IWR   'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicredteam.ps1' -UseBasicParsing);
+  Install-AtomicRedTeam -getAtomics
+  ```
 
   <img width="512" height="408" alt="redteam" src="https://github.com/user-attachments/assets/5171e837-7eb7-4ce0-b7ac-095d6cae4f41" />
 
 2 **First Technique: Local Account Creation (T1136.001)**
     - **Simulate an Attack:** The ART files are installed on the C drive in a folder containing various technique IDs (TIDs) that correspond to the MITRE ATT&CK framework. Execute a local account creation attack with the command 
-        ```PowerShell
-        Invoke-AtomicTest T1136.001
-        ```
+        
+  ```PowerShell
+  Invoke-AtomicTest T1136.001
+  ```
 
   <img width="512" height="407" alt="t1136" src="https://github.com/user-attachments/assets/9fd38cd7-a7f2-40bd-b10f-f40a3c749f12" />
     
@@ -283,12 +285,13 @@ This will create a new local user on the system.
       
 3 **Second Technique: PowerShell (T1059.001)**
     - **Execution:** To simulate a PowerShell attack, use the command 
-        ```PowerShell
-        Invoke-AtomicTest T1059.001
-        ```
-     <img width="467" height="512" alt="t1059" src="https://github.com/user-attachments/assets/832753f8-cb7c-4905-848f-baf43d2d5edf" />
-1059.png…]()
-            
+        
+  ```PowerShell
+  Invoke-AtomicTest T1059.001
+  ```
+  
+  <img width="467" height="512" alt="t1059" src="https://github.com/user-attachments/assets/832753f8-cb7c-4905-848f-baf43d2d5edf" />
+
    - **Monitor with Splunk:** Go to Splunk and search for PowerShell events to confirm that the scripting activity was successfully detected and logged.
 
   <img width="512" height="440" alt="t1059_log" src="https://github.com/user-attachments/assets/be09bb4a-0097-44d7-9557-66f7dde633b4" />
