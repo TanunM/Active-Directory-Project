@@ -35,19 +35,26 @@ This section outlines the steps for VM installation, network configuration, and 
 
 ### 1.1. VM Installation
 
-* **Windows 10:** Download the Windows 10 ISO file using the Microsoft installation media creation tool. In VirtualBox, create a new VM with the ISO, allocate **6096MB** of RAM, **4 CPU**, and a 50GB virtual disk, then proceed with a custom installation.
-* **Kali Linux:** Download the Kali Linux VM version and use a tool like 7-zip to extract the files. Import the extracted VM into VirtualBox and start it.
-* **Windows Server 2022:** Download the Windows Server 2022 ISO. In VirtualBox, create a new VM, allocate **6096MB** of RAM, **4 CPU**, and a 50GB virtual disk. Follow the on-screen prompts to install the Standard Evaluation (Desktop Experience) edition and set an administrator password.
-* **Ubuntu Server:** Download the Ubuntu Server 24.04.1 LTS ISO. Create a new VM with **8192MB** of RAM, **4 CPUs**, and a 100GB virtual disk. Follow the installation prompts, then log in and execute `sudo apt-get update && sudo apt-get upgrade -y` to update the system.
-
+1. **Windows 10:** Download the Windows 10 ISO file using the Microsoft installation media creation tool. In VirtualBox, create a new VM with the ISO, allocate **6096MB** of RAM, **4 CPU**, and a 50GB virtual disk, then proceed with a custom installation.
+2. **Kali Linux:** Download the Kali Linux VM version and use a tool like 7-zip to extract the files. Import the extracted VM into VirtualBox and start it.
+3. **Windows Server 2022:** Download the Windows Server 2022 ISO. In VirtualBox, create a new VM, allocate **6096MB** of RAM, **4 CPU**, and a 50GB virtual disk. Follow the on-screen prompts to install the Standard Evaluation (Desktop Experience) edition and set an administrator password.
+4. **Ubuntu Server:** Download the Ubuntu Server 24.04.1 LTS ISO. Create a new VM with **8192MB** of RAM, **4 CPUs**, and a 100GB virtual disk. Follow the installation prompts, then log in and execute below command to update the system.
+  ```Bash
+  sudo apt-get update && sudo apt-get upgrade -y
+  ```
 
 ### 1.2. Network Configuration
 
 1. **Create a NAT Network:** In VirtualBox, navigate to Tools and select NAT Networks to create a new network. Use the IP range 192.168.10.0/24 for this project.
 2. **Assign Network to VMs:** For all the VMs, change their network adapter settings to use the custom NAT network you just created. This enables internet connectivity and direct communication among the machines.
 3. **Configure Static IP for Ubuntu Server:** Edit the network configuration file on the Ubuntu Server to assign a static IP address.
-4. **Open the network configuration file using `sudo nano /etc/netplan/00-installer-config.yaml` or `sudo nano /etc/netplan/50-cloud-init.yaml`.**
-5. **Modify the file to include the static IP details:**
+    - Open the network configuration file using
+       ```Bash
+       sudo nano /etc/netplan/00-installer-config.yaml`
+       or
+       sudo nano /etc/netplan/50-cloud-init.yaml
+       ```
+    - **Modify the file to include the static IP details:**
     ```yaml
     network:
       version: 2
@@ -61,36 +68,51 @@ This section outlines the steps for VM installation, network configuration, and 
           nameservers:
             addresses: [8.8.8.8]
     ```
-6. Save the file and apply the changes with `sudo netplan apply`.
-7. **Configure Static IP for Windows 10:**
-    - Right-click the network icon and go to **"Network & Internet settings"**.
-    - Click **"Change adapter options"**, right-click Ethernet, and select **Properties**.
-    - Double-click **"Internet Protocol Version 4 (TCP/IPv4)"**, select **"Use the following IP address,"** and enter the desired IP address and subnet mask.
-8. **Configure Static IP for Windows Server:** Configure a static IP address in the same manner as the Windows 10 machine.
-9. **Configure Static IP for Kali Linux:**
-    - Click the network icon in the top-right corner and select **"Edit Connections."**
-    - Choose **"Wired connection 1,"** go to the **"IPv4 Settings"** tab, change the method to **Manual**, and add the desired IP address and netmask.
-    - Click **Save**.
+    - Save the file and apply the changes with
+       ```Bash
+       sudo netplan apply
+       ```
+4. **Configure Static IP for Windows 10**
+    * Right-click the network icon and go to "Network & Internet settings".
+    * Click "Change adapter options", right-click Ethernet, and select Properties.
+    * Double-click "Internet Protocol Version 4 (TCP/IPv4)", select "Use the following IP address," and enter the desired IP address and subnet mask.
 
-### 2.3. Splunk Server Configuration
+5. Configure Static IP for Windows Server
+    * Configure a static IP address in the same manner as the Windows 10 machine.
 
-- **File Transfer and Guest Additions:** To facilitate file transfers, the VirtualBox Guest Additions are required. Install the necessary packages using:
-    - **`sudo apt-get install virtualbox-guest-additions-iso`**
-    - **`sudo apt-get install virtualbox-guest-utils`**
-    - After installation, reboot the VM.
-- **Shared Folder Configuration:**
-    - Add the current user to the `vboxsf` group to enable shared folder access: `sudo adduser [username] vboxsf`.
-    - Create a directory for the shared folder: `mkdir shared`.
-    - Mount the shared folder: `sudo mount -t vboxsf -o uid=1000,gid=1000 [foldername] shared`.
-- **Splunk Installation and Configuration:**
-    - Install Splunk using the downloaded installer file: `sudo dpkg -i **[installer_name]**`.
-    - Navigate to the Splunk installation directory: `cd /opt/splunk`.
-    - To perform administrative tasks, switch to the `splunk` user: `sudo -u splunk bash`.
-    - Navigate to the bin directory: `cd /opt/splunk/bin`.
+6 Configure Static IP for Kali linux
+    * Click the network icon in the top-right corner and select "Edit Connections."
+    * Choose "Wired connection 1," go to the "IPv4 Settings" tab, change the method to Manual, and add the desired IP address and netmask.
+    * Click Save.
+
+### 1.3. Splunk Server Configuration
+1. **File Transfer and Guest Additions:** To facilitate file transfers between the host system and the VM, the VirtualBox Guest Additions are required. Install the necessary packages using the following commands:
+  ```bash
+  sudo apt-get install virtualbox-guest-additions-iso
+  sudo apt-get install virtualbox-guest-utils
+  ```
+2. After installation, reboot the VM.
+3. **Shared Folder Configuration:**
+    - Add the current user to the `vboxsf` group to enable shared folder access:
+          ```Bash sudo adduser [username] vboxsf```
+    - Create a directory for the shared folder:
+          ```Bash mkdir shared```
+    - Mount the shared folder:
+          ```Bash sudo mount -t vboxsf -o uid=1000,gid=1000 [foldername] shared```
+4. **Splunk Installation and Configuration:**
+    - Install Splunk using the downloaded installer file:
+          ```Bash sudo dpkg -i [installer_name]```
+    - Navigate to the Splunk installation directory:
+          ```Bash cd /opt/splunk```
+    - To perform administrative tasks, switch to the `splunk` user:
+          ```Bash sudo -u splunk bash```
+    - Navigate to the bin directory:
+          ```Bash cd /opt/splunk/bin```
     - Start the Splunk service for the first time: `./splunk start`. This will prompt you to read and accept the license agreement and create an administrative username and password.
-    - Configure Splunk to start automatically at boot: `sudo ./splunk enable boot-start -user splunk`.
+    - Configure Splunk to start automatically at boot:
+          ```Bash sudo ./splunk enable boot-start -user splunk```
 
-### 2.4. Install Sysmon on Windows 10 and Windows Server
+### 1.4. Install Sysmon on Windows 10 and Windows Server
 
 - Download **Sysmon** from Microsoft Sysinternals.
 - Download a pre-configured `sysmonconfig.xml` from Sysmon Modular.
