@@ -106,6 +106,10 @@ This section outlines the steps for VM installation, network configuration, and 
       ```Bash
       sudo mount -t vboxsf -o uid=1000,gid=1000 [foldername] shared
       ```
+      <img width="512" height="356" alt="splunk_config1" src="https://github.com/user-attachments/assets/af599480-1dac-43ab-ae4c-ef2ea9733a5d" />
+      <img width="351" height="18" alt="splunk_config2" src="https://github.com/user-attachments/assets/6a1dbcc1-4706-491b-9ca4-4b0e38dbc24b" />
+      <img width="512" height="141" alt="splunk_config3" src="https://github.com/user-attachments/assets/33a8a0fb-f14d-4dc3-8090-92ffd1418b64" />
+
 4. **Splunk Installation and Configuration:**
     - Install Splunk using the downloaded installer file:
         ```Bash
