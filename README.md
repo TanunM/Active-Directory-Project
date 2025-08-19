@@ -256,15 +256,63 @@ This section outlines the steps for VM installation, network configuration, and 
 
   <img width="512" height="421" alt="hydralog4" src="https://github.com/user-attachments/assets/11a23359-6340-4ad0-9780-5cc449be213a" />
 
-### 3.2. Atomic Red Team (ART) Execution
+### 2.2. Atomic Red Team (ART) Execution
 
-- **Setup:** On the Windows 10 machine, turn off Windows Defender's real-time protection and add an exclusion for the C drive. Open PowerShell as an administrator and set the execution policy to bypass with `set-ExecutionPolicy Bypass -CurrentUser`. Install ART by executing: `IEX(IWR 'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicredteam.ps1' -UseBasicParsing); Install-AtomicRedTeam -getAtomics`.
-- **First Technique: Local Account Creation (T1136.001)**
-    - **Simulate an Attack:** The ART files are installed on the C drive in a folder containing various technique IDs (TIDs) that correspond to the MITRE ATT&CK framework. Execute a local account creation attack with the command `Invoke-AtomicTest T1136.001`. This will create a new local user on the system.
+1 **Setup:** On the Windows 10 machine, turn off Windows Defender's real-time protection and add an exclusion for the C drive. Open PowerShell as an administrator and set the execution policy to bypass with
+    ```PowerShell
+    set-ExecutionPolicy Bypass -CurrentUser`. Install ART by executing: `IEX(IWR   'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicredteam.ps1' -UseBasicParsing);
+    Install-AtomicRedTeam -getAtomics
+    ```
+
+  <img width="512" height="408" alt="redteam" src="https://github.com/user-attachments/assets/5171e837-7eb7-4ce0-b7ac-095d6cae4f41" />
+
+2 **First Technique: Local Account Creation (T1136.001)**
+    - **Simulate an Attack:** The ART files are installed on the C drive in a folder containing various technique IDs (TIDs) that correspond to the MITRE ATT&CK framework. Execute a local account creation attack with the command 
+        ```PowerShell
+        Invoke-AtomicTest T1136.001
+        ```
+
+  <img width="512" height="407" alt="t1136" src="https://github.com/user-attachments/assets/9fd38cd7-a7f2-40bd-b10f-f40a3c749f12" />
+    
+This will create a new local user on the system.
     - **Monitor with Splunk:** Go to Splunk and search for the newly created user (e.g., `newlocaluser`). The events that appear confirm that Splunk successfully detected and logged the attack.
-- **Second Technique: PowerShell (T1059.001)**
-    - **Execution:** To simulate a PowerShell attack, use the command `Invoke-AtomicTest T1059.001`.
-    - **Monitor with Splunk:** Go to Splunk and search for PowerShell events to confirm that the scripting activity was successfully detected and logged.
+
+  <img width="512" height="364" alt="t1136_log" src="https://github.com/user-attachments/assets/fe3b5c97-8563-4a5b-b0da-6e1395f5fe78" />
+
+
+      
+3 **Second Technique: PowerShell (T1059.001)**
+    - **Execution:** To simulate a PowerShell attack, use the command 
+        ```PowerShell
+        Invoke-AtomicTest T1059.001
+        ```
+     <img width="467" height="512" alt="t1059" src="https://github.com/user-attachments/assets/832753f8-cb7c-4905-848f-baf43d2d5edf" />
+1059.png…]()
+            
+   - **Monitor with Splunk:** Go to Splunk and search for PowerShell events to confirm that the scripting activity was successfully detected and logged.
+
+  <img width="512" height="440" alt="t1059_log" src="https://github.com/user-attachments/assets/be09bb4a-0097-44d7-9557-66f7dde633b4" />
+
+### Troubleshooting
+
+Navigating potential issues is a crucial part of a hands-on lab. Here are some common problems you might encounter during this project and how to resolve them:
+
+* **Network Connectivity:** If your VMs cannot communicate, double-check your IP address configuration on each machine. Ensure all VMs are on the same subnet and using the correct gateway. Verify that the VirtualBox NAT network is configured with the correct IP range (e.g., `192.168.10.0/24`) and that all machines are assigned to this network adapter. Pinging between the machines is a good way to test connectivity.
+* **Splunk Data Ingestion:** If you are not seeing logs in Splunk, confirm that the Splunk Universal Forwarder is installed and running on your Windows machines. Verify that the `input.conf` file is correctly configured to monitor the necessary event logs, such as `Microsoft-Windows-Sysmon/Operational` and `Security`. Additionally, make sure the `endpoint` index has been created in Splunk to receive the forwarded data.
+* **Active Directory Domain Join:** If the Windows 10 machine fails to join the domain, ensure the Windows Server is promoted to a Domain Controller and that the domain name is typed correctly. You must use the administrator credentials for the domain, not a local account, to complete the join process. Also, verify that the Windows 10 machine can resolve the domain controller's IP address.
+* **Hydra/Brute Force Attacks:** If the brute force attack with Hydra fails, check that Remote Desktop (RDP) is enabled on the target Windows machine and that the service is running. A successful RDP connection requires that port **3389** is open and reachable on the network. Also, verify that your password list and username are correctly specified in the `hydra` command.
+
+***
+
+### Key Lab Learnings
+
+Completing this project provides a holistic understanding of both offensive and defensive cybersecurity principles, from setup to analysis.
+
+* **Active Directory Fundamentals:** You will gain a practical understanding of how Active Directory functions, including the roles of a Domain Controller, how user accounts are managed, and how machines are joined to a domain.
+* **Attacker Perspective:** You will learn to use common offensive tools like **Hydra** to perform brute force attacks and **Atomic Red Team** to simulate known attack techniques. This provides insight into how adversaries operate and the indicators they leave behind.
+* **Defender Skills:** The core of the lab is developing defensive capabilities. You will practice configuring endpoint monitoring tools like **Sysmon** to capture detailed event logs and a Security Information and Event Management (SIEM) system like **Splunk** to centrally collect and analyze these logs. This hands-on experience is vital for a career in a Security Operations Center (SOC).
+* **Log Analysis and Threat Detection:** A key takeaway is the ability to use log data to identify malicious activity. By correlating events in Splunk, you can trace an attack from initial login attempts to the execution of specific commands or scripts, effectively recreating the attack chain. You will be able to recognize failed and successful login attempts (Event ID **4625** and **4624**) from the log data.
+* **System Administration and Automation:** This project reinforces system administration skills on multiple operating systems, including network configuration and file transfer. You will also use scripting (e.g., PowerShell and Bash) to automate tasks, a critical skill for both security and IT professionals.
 
 ## References
 
