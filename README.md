@@ -199,27 +199,29 @@ This section outlines the steps for VM installation, network configuration, and 
 2. **Promote to Domain Controller:** After ADDS installation, **go to** the flag in the top-right corner of Server Manager. Click it and select **Promote this server to a domain controller**. Choose to **add a new forest**, provide a top-level domain name, set a password, and complete the installation. The server will automatically restart. The login screen will display the domain name, confirming the **server** is now a domain controller.
 3. **Create Active Directory Users:** In **Server Manager**, go to **Tools > Active Directory Users and Computers**. Right-click your domain name to create a new **Organizational Unit (OU)**. Within this new folder, right-click and create the necessary user accounts.
 4 **Join Windows 10 to the Domain:** On the Windows 10 machine, go to **About > Advanced system settings > Computer Name > Change**. Enter the domain name, authenticate with an administrator account, and restart the machine. Log in as one of the newly created domain users.
+   
+  <img width="512" height="320" alt="ad1" src="https://github.com/user-attachments/assets/8793eb13-641d-41af-8777-c54a87868bc4" />
+  <img width="512" height="249" alt="ad2" src="https://github.com/user-attachments/assets/b15588cc-27fb-4e3a-b039-e40120b34bec" />
+  <img width="512" height="406" alt="ad3" src="https://github.com/user-attachments/assets/3cc0d0bd-70e8-4970-ac7a-daeb5fa62345" />
 
-<img width="512" height="320" alt="ad1" src="https://github.com/user-attachments/assets/8793eb13-641d-41af-8777-c54a87868bc4" />
-<img width="512" height="249" alt="ad2" src="https://github.com/user-attachments/assets/b15588cc-27fb-4e3a-b039-e40120b34bec" />
-<img width="512" height="406" alt="ad3" src="https://github.com/user-attachments/assets/3cc0d0bd-70e8-4970-ac7a-daeb5fa62345" />
+### 1.7 Remote Desktop Setup
 
-### 2.7 Remote Desktop Setup
+1. **Enable Remote Desktop:** On the Windows 10 machine, navigate to **System Properties** by going to **Windows > PC > Properties > Advanced system settings**. Log in as an administrator, click the **Remote** tab, and select **Allow remote connections to this computer**.
+2. **Add Users:** Click **Select Users** to add the domain users who will have remote access. Confirm the changes by clicking **OK** and **Apply**.
 
-- **Enable Remote Desktop:** On the Windows 10 machine, navigate to **System Properties** by going to **Windows > PC > Properties > Advanced system settings**. Log in as an administrator, click the **Remote** tab, and select **Allow remote connections to this computer**.
-- **Add Users:** Click **Select Users** to add the domain users who will have remote access. Confirm the changes by clicking **OK** and **Apply**.
+  <img width="512" height="404" alt="rds1" src="https://github.com/user-attachments/assets/3b3d0989-3796-405c-babe-c2d36610a534" />
+  <img width="479" height="459" alt="rds2" src="https://github.com/user-attachments/assets/61c78b50-8645-4f9d-b6a0-0de04117b6d9" />
 
-## 3. Security Testing with Hydra and Atomic Red Team
+## 2. Security Testing with Hydra and Atomic Red Team
 
-### 3.1. Brute Force Attack
-
-- **Kali Linux Configuration:** Update the package repositories of Kali Linux. Create a project directory.
-    ```bash
+### 2.1. Brute Force Attack
+1 **Kali Linux Configuration:** Update the package repositories of Kali Linux. Create a project directory.
+    ```Bash
     sudo apt-get update && sudo apt-get upgrade -y
     mkdir ad-project
     ```
-- **Brute Force Attack Preparation:** Copy a password wordlist into your project directory. Create a smaller password list by selecting approximately 20 passwords from the main list and adding the passwords for the users you created on the Windows Server.
-    ```bash
+2 **Brute Force Attack Preparation:** Copy a password wordlist into your project directory. Create a smaller password list by selecting approximately 20 passwords from the main list and adding the passwords for the users you created on the Windows Server.
+    ```Bash
     cd /usr/share/wordlists/
     sudo gunzip rockyou.txt.gz
     cp rockyou.txt ~/Desktop/ad-project
@@ -227,8 +229,32 @@ This section outlines the steps for VM installation, network configuration, and 
     head -n 20 rockyou.txt > passwords.txt
     nano passwords.txt
     ```
-- **Execution:** Use **Hydra** to launch a brute force attack against the Windows 10 machine's Remote Desktop Protocol (RDP) service. The command: `hydra -l [username] -P [passwordlist] -V rdp://[target_IP]` will attempt to authenticate with the specified user and password list. A successful connection will be established upon finding the correct credentials.
-- **Splunk Log Analysis:** In Splunk, use a search query like `index=endpoint username="<username>"` to find events. Expand on **Event ID 4625** to see the failed login attempts originating from the Kali machine's IP address.
+  
+  <img width="512" height="347" alt="hydra1" src="https://github.com/user-attachments/assets/1eca479b-0c28-4aee-a080-460aa2487b7c" />
+    
+3 **Execution:** Use **Hydra** to launch a brute force attack against the Windows 10 machine's Remote Desktop Protocol (RDP) service. The command will attempt to authenticate with the specified user and password list. A successful connection will be established upon finding the correct credentials.
+  ```Bash
+  hydra -l [username] -P [passwordlist] -V rdp://[target_IP]
+  ```
+
+<img width="512" height="218" alt="hydra2" src="https://github.com/user-attachments/assets/fa8f5a73-f913-400b-9445-83856a227ebe" />
+
+4 **Splunk Log Analysis:** In Splunk, use a search query like `index=endpoint username="<username>"` to find events. Expand on **Event ID 4625** to see the failed login attempts originating from the Kali machine's IP address.
+  - Multiple event code generated for the target user
+
+  <img width="512" height="467" alt="hydralog1" src="https://github.com/user-attachments/assets/7357ee64-a4f7-456f-b8ac-9def7372a242" />
+    
+  - Eventcode = 4625 shows failed login attempts
+
+  <img width="512" height="381" alt="hydralog2" src="https://github.com/user-attachments/assets/ca248acd-4f58-4e04-9b86-4b5bacf75782" />
+
+  - Eventcode = 4624 shows successful login
+
+  <img width="512" height="384" alt="hydralog3" src="https://github.com/user-attachments/assets/6a085083-80b4-4cdc-8fc1-a787eeff722b" />
+
+  - Here we can see the successful login is from kali linux which is the attacker machine
+
+  <img width="512" height="421" alt="hydralog4" src="https://github.com/user-attachments/assets/11a23359-6340-4ad0-9780-5cc449be213a" />
 
 ### 3.2. Atomic Red Team (ART) Execution
 
